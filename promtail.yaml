@@ -1,0 +1,28 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+  - job_name: minecraft-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: minecraft-logs
+          __path__: /var/log/minecraft/latest.log
+    pipeline_stages:
+      - regex:
+          expression: '^\$$([0-9\:]{8})$$ \[([^\$$]+)\/([A-Z]+)\]: (.*)'
+          source: "log"
+      - labels:
+          timestamp: '{1}'
+          level: '{3}'
+          module: '{2}'
+          message: '{4}'
